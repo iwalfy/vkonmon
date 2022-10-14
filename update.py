@@ -10,12 +10,12 @@ f = open(_workdir + "/token.txt", "r")
 _token = f.read()
 f.close()
 
-_users = ",".join(listdir_nohidden(_workdir + "/data"))
-
 def listdir_nohidden(path):
     for f in os.listdir(path):
         if not f.startswith('.'):
             yield f
+
+_users = ",".join(listdir_nohidden(_workdir + "/data"))
 
 def main():
 	r = requests.get("https://api.vk.com/method/users.get?user_ids={users}&fields=online&access_token={token}&v=5.131".format(token = _token, users = _users))

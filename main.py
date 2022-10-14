@@ -36,6 +36,7 @@ def _list():
 <head>
 <title>VkOnlineMon</title>
 <meta charset="UTF-8">
+<meta name="robots" content="noindex">
 </head>
 <body>
 <table>"""
@@ -72,7 +73,8 @@ def _graph(_user):
 		      "DEF:online=./data/" + _user + "/data.rrd:online:MAX",
 		      "AREA:online#00FF00:Online from desktop",
 		      "DEF:online_mobile=./data/" + _user + "/data.rrd:online_mobile:MAX",
-		      "AREA:online_mobile#80A6FF:Online from mobile")
+		      "AREA:online_mobile#80A6FF:Online from mobile",
+		      "CDEF:wrongdata=online,UN,INF,UNKN,IF", "AREA:wrongdata#00000015")
 	# day
 	rrdtool.graph("./static/" + _user + "/online-day.png",
 		      "--imgformat", "PNG", "--end", "now", "--start", "end-86399s", "--y-grid", "none", "--vertical-label", "", "--zoom", "2", "--border", "1",
@@ -80,7 +82,8 @@ def _graph(_user):
 		      "DEF:online=./data/" + _user + "/data.rrd:online:MAX",
 		      "AREA:online#00FF00:Online from desktop",
 		      "DEF:online_mobile=./data/" + _user + "/data.rrd:online_mobile:MAX",
-		      "AREA:online_mobile#80A6FF:Online from mobile")
+		      "AREA:online_mobile#80A6FF:Online from mobile",
+		      "CDEF:wrongdata=online,UN,INF,UNKN,IF", "AREA:wrongdata#00000015")
 	# week
 	rrdtool.graph("./static/" + _user + "/online-week.png",
 		      "--imgformat", "PNG", "--end", "now", "--start", "end-7d", "--y-grid", "none", "--vertical-label", "", "--zoom", "2", "--border", "1",
@@ -88,7 +91,8 @@ def _graph(_user):
 		      "DEF:online=./data/" + _user + "/data.rrd:online:MAX",
 		      "AREA:online#00FF00:Online from desktop",
 		      "DEF:online_mobile=./data/" + _user + "/data.rrd:online_mobile:MAX",
-		      "AREA:online_mobile#80A6FF:Online from mobile")
+		      "AREA:online_mobile#80A6FF:Online from mobile",
+		      "CDEF:wrongdata=online,UN,INF,UNKN,IF", "AREA:wrongdata#00000015")
 	# 30 days
 	rrdtool.graph("./static/" + _user + "/online-30d.png",
 		      "--imgformat", "PNG", "--end", "now", "--start", "end-30d", "--y-grid", "none", "--vertical-label", "", "--zoom", "2", "--border", "1",
@@ -96,13 +100,15 @@ def _graph(_user):
 		      "DEF:online=./data/" + _user + "/data.rrd:online:MAX",
 		      "AREA:online#00FF00:Online from desktop",
 		      "DEF:online_mobile=./data/" + _user + "/data.rrd:online_mobile:MAX",
-		      "AREA:online_mobile#80A6FF:Online from mobile")
+		      "AREA:online_mobile#80A6FF:Online from mobile",
+		      "CDEF:wrongdata=online,UN,INF,UNKN,IF", "AREA:wrongdata#00000015")
 
 	return """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <head>
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
   <meta http-equiv="pragma" content="no-cache">
   <meta http-equiv="refresh" content="30">
+  <meta name="robots" content="noindex">
   <title>{first_name} {last_name}</title>
 </head>
 <body>
@@ -165,21 +171,29 @@ def _add():
 	if (not _user != ""):
 		return "no id provided"
 
-	_dir = "./data/" + _user
-	if (os.path.exists(_dir)):
-		return "user already exists"
-
 	f = open("./token.txt", "r")
 	_token = f.read()
 	f.close()
 
-	r = requests.get("https://api.vk.com/method/users.get?user_ids={user}&access_token={token}&v=5.131".format(token = _token, user = _user))
+	r = requests.get("https://api.vk.com/method/users.get?user_ids={user}&fields=last_seen&access_token={token}&v=5.131".format(token = _token, user = _user))
 	if (not r.json().get("response")):
 		return "account with this id not exists"
 	_resp = r.json().get("response")[0]
 
+	_id = _resp.get("id")
+
+	_dir = "./data/" + str(_id)
+	if (os.path.exists(_dir)):
+		return "user already exists"
+
+	if not _resp.get("last_seen"):
+		return "cannot retrive online"
+
 	_first_name = _resp.get("first_name")
 	_last_name = _resp.get("last_name")
+
+	if (os.path.exists("./data/" + str(_id))):
+		return "user already exists"
 
 	os.mkdir(_dir)
 	rrdtool.create(_dir + "/data.rrd",
@@ -207,6 +221,10 @@ def _static(_file):
 		return "file not exists"
 
 	return send_from_directory("./static", _file)
+
+@app.route("/robots.txt")
+def _robots():
+	return send_from_directory("./static", "robots.txt")
 
 if __name__ == "__main__":
 	app.run(host='0.0.0.0')
