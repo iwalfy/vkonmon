@@ -37,8 +37,28 @@ def _list():
 <title>VkOnlineMon</title>
 <meta charset="UTF-8">
 <meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {
+	font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+	text-align: center;
+	padding-bottom: 50px;
+}
+a {
+	color: #0d6efd;
+	text-decoration: none;
+	font-size: 20px;
+}
+a:hover {
+	color: #0a58ca;
+}
+table {
+	margin: auto;
+}
+</style>
 </head>
 <body>
+<h1>VkOnlineMon</h1>
 <table>"""
 	for _user in _users:
 		f = open("./data/" + _user + "/info.json", "r")
@@ -47,7 +67,7 @@ def _list():
 		_first_name = _info.get("first_name")
 		_last_name = _info.get("last_name")
 		_out += "<tr><td><a href=\"/{user}\">{first_name} {last_name}</a></td></tr>".format(user = _user, first_name = _first_name, last_name = _last_name)
-	_out += "</table><hr>Powered by Flask, RRDtool and pornozal.online source code</body></html>"
+	_out += "</table></body></html>"
 	return _out
 
 @app.route("/<_user>")
@@ -67,61 +87,87 @@ def _graph(_user):
 	_last_name = _info.get("last_name")
 
 	# 8 hours
-	rrdtool.graph("./static/" + _user + "/online-hours.png",
-		      "--imgformat", "PNG", "--end", "now", "--start", "end-28800s", "--y-grid", "none", "--vertical-label", "", "--zoom", "2", "--border", "1",
-		      "--width", "600", "--height", "100", "--upper-limit", "1", "--lower-limit", "0",
+	rrdtool.graph("./static/" + _user + "/online-hours.svg",
+		      "--imgformat", "SVG", "--end", "now", "--start", "end-28800s", "--y-grid", "none", "--vertical-label", "", "--zoom", "2", "--border", "0",
+		      "--width", "600", "--height", "50", "--upper-limit", "1", "--lower-limit", "0",
 		      "DEF:online=./data/" + _user + "/data.rrd:online:MAX",
-		      "AREA:online#00FF00:Online from desktop",
-		      "DEF:online_mobile=./data/" + _user + "/data.rrd:online_mobile:MAX",
-		      "AREA:online_mobile#80A6FF:Online from mobile",
+			  "DEF:online_mobile=./data/" + _user + "/data.rrd:online_mobile:MAX",
+			  "CDEF:online2=online,10,0,IF",
+			  "CDEF:online_mobile2=online_mobile,10,0,IF",
+		      "AREA:online2#00FF00:Online from desktop",
+		      "AREA:online_mobile2#80A6FF:Online from mobile",
 		      "CDEF:wrongdata=online,UN,INF,UNKN,IF", "AREA:wrongdata#00000015")
 	# day
-	rrdtool.graph("./static/" + _user + "/online-day.png",
-		      "--imgformat", "PNG", "--end", "now", "--start", "end-86399s", "--y-grid", "none", "--vertical-label", "", "--zoom", "2", "--border", "1",
-		      "--width", "600", "--height", "100", "--upper-limit", "1", "--lower-limit", "0",
+	rrdtool.graph("./static/" + _user + "/online-day.svg",
+		      "--imgformat", "SVG", "--end", "now", "--start", "end-86399s", "--y-grid", "none", "--vertical-label", "", "--zoom", "2", "--border", "0",
+		      "--width", "600", "--height", "50", "--upper-limit", "1", "--lower-limit", "0",
 		      "DEF:online=./data/" + _user + "/data.rrd:online:MAX",
-		      "AREA:online#00FF00:Online from desktop",
-		      "DEF:online_mobile=./data/" + _user + "/data.rrd:online_mobile:MAX",
-		      "AREA:online_mobile#80A6FF:Online from mobile",
+			  "DEF:online_mobile=./data/" + _user + "/data.rrd:online_mobile:MAX",
+			  "CDEF:online2=online,10,0,IF",
+			  "CDEF:online_mobile2=online_mobile,10,0,IF",
+		      "AREA:online2#00FF00:Online from desktop",
+		      "AREA:online_mobile2#80A6FF:Online from mobile",
 		      "CDEF:wrongdata=online,UN,INF,UNKN,IF", "AREA:wrongdata#00000015")
 	# week
-	rrdtool.graph("./static/" + _user + "/online-week.png",
-		      "--imgformat", "PNG", "--end", "now", "--start", "end-7d", "--y-grid", "none", "--vertical-label", "", "--zoom", "2", "--border", "1",
-		      "--width", "600", "--height", "100", "--upper-limit", "1", "--lower-limit", "0",
+	rrdtool.graph("./static/" + _user + "/online-week.svg",
+		      "--imgformat", "SVG", "--end", "now", "--start", "end-7d", "--y-grid", "none", "--vertical-label", "", "--zoom", "2", "--border", "0",
+		      "--width", "600", "--height", "50", "--upper-limit", "1", "--lower-limit", "0",
 		      "DEF:online=./data/" + _user + "/data.rrd:online:MAX",
-		      "AREA:online#00FF00:Online from desktop",
-		      "DEF:online_mobile=./data/" + _user + "/data.rrd:online_mobile:MAX",
-		      "AREA:online_mobile#80A6FF:Online from mobile",
+			  "DEF:online_mobile=./data/" + _user + "/data.rrd:online_mobile:MAX",
+			  "CDEF:online2=online,10,0,IF",
+			  "CDEF:online_mobile2=online_mobile,10,0,IF",
+		      "AREA:online2#00FF00:Online from desktop",
+		      "AREA:online_mobile2#80A6FF:Online from mobile",
 		      "CDEF:wrongdata=online,UN,INF,UNKN,IF", "AREA:wrongdata#00000015")
 	# 30 days
-	rrdtool.graph("./static/" + _user + "/online-30d.png",
-		      "--imgformat", "PNG", "--end", "now", "--start", "end-30d", "--y-grid", "none", "--vertical-label", "", "--zoom", "2", "--border", "1",
-		      "--width", "600", "--height", "100", "--upper-limit", "1", "--lower-limit", "0",
+	rrdtool.graph("./static/" + _user + "/online-30d.svg",
+		      "--imgformat", "SVG", "--end", "now", "--start", "end-30d", "--y-grid", "none", "--vertical-label", "", "--zoom", "2", "--border", "0",
+		      "--width", "600", "--height", "50", "--upper-limit", "1", "--lower-limit", "0",
 		      "DEF:online=./data/" + _user + "/data.rrd:online:MAX",
-		      "AREA:online#00FF00:Online from desktop",
-		      "DEF:online_mobile=./data/" + _user + "/data.rrd:online_mobile:MAX",
-		      "AREA:online_mobile#80A6FF:Online from mobile",
+			  "DEF:online_mobile=./data/" + _user + "/data.rrd:online_mobile:MAX",
+			  "CDEF:online2=online,10,0,IF",
+			  "CDEF:online_mobile2=online_mobile,10,0,IF",
+		      "AREA:online2#00FF00:Online from desktop",
+		      "AREA:online_mobile2#80A6FF:Online from mobile",
 		      "CDEF:wrongdata=online,UN,INF,UNKN,IF", "AREA:wrongdata#00000015")
 
-	return """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+	return """<!DOCTYPE html>
 <head>
-  <meta http-equiv="content-type" content="text/html; charset=utf-8">
-  <meta http-equiv="pragma" content="no-cache">
-  <meta http-equiv="refresh" content="30">
-  <meta name="robots" content="noindex">
-  <title>{first_name} {last_name}</title>
+<meta charset="UTF-8">
+<meta http-equiv="pragma" content="no-cache">
+<meta http-equiv="refresh" content="30">
+<meta name="robots" content="noindex">
+<title>{first_name} {last_name}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {{
+	font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+	text-align: center;
+	padding-bottom: 50px;
+}}
+a {{
+	color: #0d6efd;
+	text-decoration: none;
+}}
+a:hover {{
+	color: #0a58ca;
+}}
+img {{
+	width: 800px;
+}}
+@media only screen and (max-width: 800px) {{
+	img {{
+		width: 100%;
+	}}
+}}
+</style>
 </head>
 <body>
-<center>
-<h1>{first_name} {last_name}</h1>
-<IMG SRC="/static/{user}/online-hours.png" WIDTH=681 HEIGHT=155><br>За последние 8 часов<br><br>
-
-<IMG SRC="/static/{user}/online-day.png" WIDTH=681 HEIGHT=155><br>За сутки<br><br>
-
-<IMG SRC="/static/{user}/online-week.png" WIDTH=681 HEIGHT=155><br>За неделю<br><br>
-
-<IMG SRC="/static/{user}/online-30d.png" WIDTH=681 HEIGHT=155><br>За месяц<br><br>
-</center>
+<h1><a href="https://vk.com/id{user}" target="_blank">{first_name} {last_name}</a></h1>
+<img src="/static/{user}/online-hours.svg"><br>За последние 8 часов<br><br>
+<img src="/static/{user}/online-day.svg"><br>За сутки<br><br>
+<img src="/static/{user}/online-week.svg"><br>За неделю<br><br>
+<img src="/static/{user}/online-30d.svg"><br>За месяц<br><br>
 </body>
 </html>
 """.format(user = _user, first_name = _first_name, last_name = _last_name)
